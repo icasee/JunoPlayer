@@ -1,0 +1,4 @@
+<resources>
+    <item name="exo_current_time" type="id"/>
+    <item name="exo_end_time" type="id"/>
+</resources>
