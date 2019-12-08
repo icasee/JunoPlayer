@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="#58000000">
 
     <RelativeLayout
@@ -39,63 +40,90 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@id/exo_panel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_weight="100"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp">
 
             <ImageView
-                android:id="@+id/spxx"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/ic_fullscreen_exit" />
-
-            <TextView
-                android:id="@id/exo_current_time"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal|center_vertical"
-                android:layout_weight="0.2"
-                android:gravity="center"
-                android:text="00:00"
-                android:textColor="#ffffff"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
+                android:id="@+id/exo_speaker"
+                android:layout_width="28dp"
+                android:layout_height="21dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ip_speaker_on" />
 
             <com.google.android.exoplayer2.ui.DefaultTimeBar
                 android:id="@id/exo_progress"
                 android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_weight="0.6"
-                app:buffered_color="#D15D5D"
-                app:played_color="#8BC34A"
-                app:scrubber_color="#FF9800"
-                app:unplayed_color="@android:color/white" />
-
+                android:layout_weight="1"
+                app:buffered_color="#FFA55C0C"
+                app:played_color="#FF8000"
+                app:scrubber_color="#FF8000"
+                app:unplayed_color="#999999" />
 
             <TextView
-                android:id="@id/exo_end_time"
-                android:layout_width="0dp"
+                android:id="@id/exo_position"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|center_vertical"
-                android:layout_weight="0.2"
                 android:gravity="center"
-                android:text="99:99"
+                android:text="-"
                 android:textColor="#ffffff"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textSize="12sp" />
 
-            <ImageView
-                android:id="@+id/img_full_screen_enter_exit"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/ic_fullscreen" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:gravity="center"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:text="/"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@id/exo_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:gravity="center"
+                android:text="-"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+
 
         </LinearLayout>
+
+        <View
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="1dp"/>
+
+        <TextView
+            android:id="@id/exo_live_text"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:textColor="#fff"
+            android:text="直播"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <ImageView
+            android:id="@+id/img_full_screen_enter_exit"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_fullscreen" />
 
     </LinearLayout>
 </FrameLayout>

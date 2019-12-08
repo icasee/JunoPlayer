@@ -1,33 +1,54 @@
 package com.poktsun.junoplayerapp
 
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.poktsun.junoplayer.JunoPlayer
-import com.poktsun.junoplayer.JunoPlayerView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
+import com.google.android.material.tabs.TabLayout
 import timber.log.Timber
 
+
 class MainActivity : AppCompatActivity() {
-    val VIDEO_URL = "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8"
+    private val manager: FragmentManager = supportFragmentManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //val junoPlayerView = JunoPlayer(baseContext)
-        val junoPlayerView = findViewById<JunoPlayerView>(R.id.player_view)
+        val tabLayout = findViewById<TabLayout>(R.id.tab_layout)
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabReselected(p0: TabLayout.Tab?) {
+                Timber.d("-26, onTabReselected:%s", 1)
+            }
 
-        findViewById<View>(R.id.button1)?.setOnClickListener {
-            junoPlayerView.prepare(VIDEO_URL)
-            Timber.d("-30 , onCreate : %s", 1)
+            override fun onTabUnselected(p0: TabLayout.Tab?) {
+                Timber.d("-30, onTabUnselected:%s", 2)
+            }
 
-        }
+            override fun onTabSelected(p0: TabLayout.Tab?) {
+                when (p0?.text) {
+                    "VOD" -> replaceFragment(VodPlayerFragment())
+                    "LIVE" -> replaceFragment(LivePlayerFragment())
+                    "AUDIO" -> replaceFragment(AudioPlayerFragment())
+                    else -> replaceFragment(VodPlayerFragment())
+                }
+                Timber.d("-34, onTabSelected:%s", 3)
+            }
+        })
+        tabLayout.addTab(tabLayout.newTab().setText("VOD"))
+        tabLayout.addTab(tabLayout.newTab().setText("LIVE"))
+        tabLayout.addTab(tabLayout.newTab().setText("AUDIO"))
 
-        findViewById<View>(R.id.button2)?.setOnClickListener {
-            junoPlayerView.prepare(VIDEO_URL)
-            Timber.d("-30 , onCreate : %s", 1)
-
-        }
-
+        //tabLayout.setScrollPosition(0, 0f, true)
+        tabLayout.getTabAt(0)?.select()
     }
+
+    fun replaceFragment(fragment: Fragment) {
+        val transaction: FragmentTransaction = manager.beginTransaction()
+        transaction.replace(R.id.container, fragment)
+        transaction.commit()
+    }
+
+
 }

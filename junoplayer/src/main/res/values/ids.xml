@@ -1,4 +1,8 @@
 <resources>
+    <item name="exo_speaker" type="id"/>
+    <item name="exo_live_text" type="id"/>
+    <item name="exo_panel" type="id"/>
+    <item name="exo_timer" type="id"/>
     <item name="exo_current_time" type="id"/>
     <item name="exo_end_time" type="id"/>
 </resources>
