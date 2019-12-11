@@ -7,6 +7,7 @@ import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.ext.ima.ImaAdsLoader
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.ads.AdsLoader
 import com.google.android.exoplayer2.source.ads.AdsMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
@@ -112,7 +113,9 @@ class JunoPlayer(context: Context) : AnalyticsListener {
             C.TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(uri)
             //mp3, mp4...
-            C.TYPE_OTHER -> ExtractorMediaSource.Factory(dataSourceFactory)
+//            C.TYPE_OTHER -> ExtractorMediaSource.Factory(dataSourceFactory)
+//                .createMediaSource(uri)
+            C.TYPE_OTHER -> ProgressiveMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(uri)
             else -> {
                 throw IllegalStateException("Unsupported type: $type")
