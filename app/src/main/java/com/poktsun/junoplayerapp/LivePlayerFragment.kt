@@ -21,7 +21,6 @@ class LivePlayerFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val junoPlayerView = view.findViewById<JunoPlayerView>(R.id.player_view)
-        junoPlayerView.mode = 1
         junoPlayerView.play(GlobalApp.VIDEO_URL)
     }
 }

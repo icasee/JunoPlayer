@@ -5,11 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.poktsun.junoplayer.JunoPlayerListener
 import com.poktsun.junoplayer.JunoLifecycle
 import com.poktsun.junoplayer.JunoPlayerView
 import timber.log.Timber
 
-class VodPlayerFragment: Fragment() {
+
+class VodPlayerFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -24,7 +26,27 @@ class VodPlayerFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val junoPlayerView = view.findViewById<JunoPlayerView>(R.id.player_view)
-        junoPlayerView.mode = 0
+        junoPlayerView.run {
+            volume = 0f
+            listener = object : JunoPlayerListener {
+
+                override fun onPlay() {
+                    Timber.d("-34, onPlay:%s", 1)
+                }
+
+                override fun onPause() {
+                    Timber.d("-38, onPause:%s", 2)
+                }
+
+                override fun onAdLoaded() {
+                    Timber.d("-42, onAdLoaded:%s",3)
+                }
+
+                override fun onAdCompleted() {
+                    Timber.d("-36, onAdCompleted: %s", 4)
+                }
+            }
+        }
 
         view.findViewById<View>(R.id.button1)?.setOnClickListener {
             junoPlayerView.play(GlobalApp.VIDEO_URL)

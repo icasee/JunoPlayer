@@ -112,7 +112,8 @@ class JunoPlayer(context: Context) : AnalyticsListener {
             C.TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(uri)
             //mp3, mp4...
-            C.TYPE_OTHER -> ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri)
+            C.TYPE_OTHER -> ExtractorMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(uri)
             else -> {
                 throw IllegalStateException("Unsupported type: $type")
             }

@@ -1,30 +1,22 @@
 package com.poktsun.junoplayer
 
 import android.content.Context
-import android.content.ContextWrapper
 import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.TextView
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventType.ALL_ADS_COMPLETED
 import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventType.CONTENT_PAUSE_REQUESTED
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.ima.ImaAdsLoader
-import com.google.android.exoplayer2.source.ads.AdsLoader
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
 
 class JunoPlayerView : PlayerView, LifecycleObserver {
     private val disposables = CompositeDisposable()
@@ -39,23 +31,18 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
             return (context as LifecycleOwner).lifecycle
         }
 
-    var mode: Int = 0
+    var volume: Float
         set(value) {
-            when(value) {
-                1 -> {
-                    tvPlayerLive?.visibility = View.VISIBLE
-                    tvPlayerPanel?.visibility = View.GONE
-                    Timber.d("-48, :%s", 1)
-                }
-                else -> {
-                    tvPlayerLive?.visibility = View.GONE
-                    tvPlayerPanel?.visibility = View.VISIBLE
-                    Timber.d("-48, :%s", 2)
-                }
-            }
-            field = value
+            tvPlayerSpeaker?.setImageResource(
+                if (value == 1f) R.drawable.ip_speaker_on else R.drawable.ip_speaker_off
+            )
+            junoPlayer.volume = value
         }
+        get() = junoPlayer.volume
 
+    var listener: JunoPlayerListener? = null
+
+    //TD
     constructor(context: Context?) : this(context, null)
     constructor(context: Context?, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -67,13 +54,7 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
         tvPlayerLive = findViewById(R.id.exo_live_text)
         tvPlayerSpeaker = findViewById(R.id.exo_speaker)
         tvPlayerSpeaker?.setOnClickListener {
-            if (junoPlayer.volume == 1f) {
-                junoPlayer.volume = 0f
-                tvPlayerSpeaker?.setImageResource(R.drawable.ip_speaker_off)
-            } else {
-                junoPlayer.volume = 1f
-                tvPlayerSpeaker?.setImageResource(R.drawable.ip_speaker_on)
-            }
+            volume = if (volume == 1f) 0f else 1f
         }
 
         //playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH);
@@ -81,6 +62,24 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
         super.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT)
         super.setKeepScreenOn(true)
         //super.setUseController(false)
+        player?.addListener(object: Player.EventListener{
+            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                when (playbackState) {
+                    Player.STATE_READY -> {
+                        if (playWhenReady) {
+                            listener?.onPlay()
+                            Timber.d("-87 , PLAY : %s", 1)
+                        } else {
+                            listener?.onPause()
+                            Timber.d("-87 , PAUSE : %s", 2)
+                        }
+                    }
+                    Player.STATE_BUFFERING -> Timber.d("-107 , onPlayerStateChanged : %s", 4)
+                    else -> Timber.e("-94 , onPlayerStateChanged : %s", playbackState)
+                }
+                Timber.d("-57, onPlayerStateChanged:%s", playbackState)
+            }
+        })
 
         lifecycle.addObserver(this)
     }
@@ -92,14 +91,13 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
     fun playWithAds(videoUrl: String, adTagUrl: String) {
         val imaAdsLoader = ImaAdsLoader(context, Uri.parse(adTagUrl))
         imaAdsLoader.setPlayer(junoPlayer.getPlayer())
-        imaAdsLoader.adsLoader.addAdsLoadedListener {
-            it?.adsManager?.addAdEventListener { adEvent ->
+        imaAdsLoader.adsLoader.addAdsLoadedListener {adsManagerEvent ->
+            adsManagerEvent?.adsManager?.addAdEventListener { adEvent ->
                 when (adEvent?.type) {
-                    CONTENT_PAUSE_REQUESTED -> junoPlayer.volume = 0f
-                    ALL_ADS_COMPLETED -> junoPlayer.volume = 1f
+                    CONTENT_PAUSE_REQUESTED -> listener?.onAdLoaded()
+                    ALL_ADS_COMPLETED -> listener?.onAdCompleted()
                     else -> Timber.d("-120 , playWidthAds : %s", adEvent?.type)
                 }
-                Timber.d("-99 , onAdEvent : %s", adEvent?.type)
             }
         }
 
@@ -109,37 +107,6 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
             this)
         junoPlayer.prepare(adsMediaSource)
     }
-
-//    private fun setProgress() {
-//        disposables.clear()
-//        Timber.e("-87, setProgress:%s", 23)
-//        val d = Observable.interval(1, TimeUnit.SECONDS)
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe {
-//                setPlayerState()
-//            }
-//
-//        disposables.add(d)
-//    }
-//
-//    private fun setPlayerState() {
-//        val currentPosition = stringForTime(junoPlayer.currentPosition)
-//        val duration = stringForTime(junoPlayer.duration)
-//        tvPlayerTimer?.text = String.format("%s / %s", currentPosition, duration)
-//        Timber.d("-83 , setProgress : %s", junoPlayer.duration)
-//    }
-//
-//    private fun stringForTime(timeMs: Long): String {
-//        val totalSeconds = timeMs / 1000
-//        val seconds = totalSeconds % 60
-//        val minutes = totalSeconds / 60 % 60
-//        val hours = totalSeconds / 3600
-//        return when {
-//            hours > 0 -> String.format("%d:%02d:%02d", hours, minutes, seconds)
-//            seconds > 0 -> String.format("%02d:%02d", minutes, seconds)
-//            else -> "0:00"
-//        }
-//    }
 
     //Lifecycle
     override fun onDetachedFromWindow() {
