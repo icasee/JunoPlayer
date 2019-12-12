@@ -5,7 +5,6 @@ import android.net.Uri
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.ext.ima.ImaAdsLoader
-import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.ads.AdsLoader
@@ -41,17 +40,13 @@ class JunoPlayer(context: Context) : AnalyticsListener {
         )
     }
 
+    var listener: JunoPlayerListener? = null
+
     var volume: Float
         set(value) {
             exoPlayer.volume = value
         }
         get() = exoPlayer.volume
-
-    val position
-        get() = exoPlayer.currentPosition
-
-    val duration
-        get() = exoPlayer.duration
 
     init {
         Timber.d("-66, :%s", context)
@@ -67,8 +62,14 @@ class JunoPlayer(context: Context) : AnalyticsListener {
         prepare(mediaSource)
     }
 
+    fun play() {
+        exoPlayer.playWhenReady = true
+        exoPlayer.playbackState
+    }
+
     fun pause() {
         exoPlayer.playWhenReady = false
+        exoPlayer.playbackState
     }
 
     fun stop() {
@@ -82,8 +83,7 @@ class JunoPlayer(context: Context) : AnalyticsListener {
 
     fun prepare(
         mediaSource: MediaSource,
-        playWhenReady:
-        Boolean = true
+        playWhenReady: Boolean = true
     ) {
         exoPlayer.playWhenReady = playWhenReady
         exoPlayer.prepare(mediaSource)
@@ -102,6 +102,9 @@ class JunoPlayer(context: Context) : AnalyticsListener {
         )
     }
 
+    /**
+     * @see <a href="https://exoplayer.dev/progressive.html">progressive</a>
+     */
     private fun buildMediaSource(
         uri: Uri
     ): MediaSource {
@@ -112,9 +115,6 @@ class JunoPlayer(context: Context) : AnalyticsListener {
                 .createMediaSource(uri)
             C.TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(uri)
-            //mp3, mp4...
-//            C.TYPE_OTHER -> ExtractorMediaSource.Factory(dataSourceFactory)
-//                .createMediaSource(uri)
             C.TYPE_OTHER -> ProgressiveMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(uri)
             else -> {
@@ -127,6 +127,7 @@ class JunoPlayer(context: Context) : AnalyticsListener {
         eventTime: AnalyticsListener.EventTime?,
         error: ExoPlaybackException?
     ) {
+        listener?.onError(error)
         Timber.d(error, "-85 , onPlayerError : %s", error?.message)
     }
 
@@ -138,17 +139,14 @@ class JunoPlayer(context: Context) : AnalyticsListener {
         when (playbackState) {
             Player.STATE_READY -> {
                 if (playWhenReady) {
-                    //setProgress()
-                    Timber.d("-87 , PLAY : %s", 1)
+                    listener?.onPlay()
                 } else {
-                    //disposables.clear()
-                    Timber.d("-87 , PAUSE : %s", 2)
+                    listener?.onPause()
                 }
             }
-            Player.STATE_BUFFERING -> Timber.d("-107 , onPlayerStateChanged : %s", 4)
-            else -> Timber.e("-94 , onPlayerStateChanged : %s", playbackState)
+            Player.STATE_BUFFERING -> listener?.onBuffering()
+            Player.STATE_ENDED -> listener?.onEnded()
+            else -> Timber.e("-151 , onPlayerStateChanged : %s", playbackState)
         }
     }
-
-
 }

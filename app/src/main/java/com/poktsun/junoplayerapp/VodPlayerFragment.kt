@@ -30,6 +30,14 @@ class VodPlayerFragment : Fragment() {
             volume = 0f
             listener = object : JunoPlayerListener {
 
+                override fun onEnded() {
+                    Timber.d("-34, onEnded:%s", 5)
+                }
+
+                override fun onBuffering() {
+                    Timber.d("-38, onBuffering:%s",6)
+                }
+
                 override fun onPlay() {
                     Timber.d("-34, onPlay:%s", 1)
                 }

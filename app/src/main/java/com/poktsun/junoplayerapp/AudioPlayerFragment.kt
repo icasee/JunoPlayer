@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.poktsun.junoplayer.JunoPlayer
+import com.poktsun.junoplayer.JunoPlayerListener
 import timber.log.Timber
 
 class AudioPlayerFragment: Fragment() {
@@ -23,6 +24,16 @@ class AudioPlayerFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val junoPlayer = JunoPlayer(context!!)
+        junoPlayer.listener = object : JunoPlayerListener{
+
+            override fun onPlay() {
+                Timber.d("-29, onPlay:%s",1)
+            }
+
+            override fun onPause() {
+                Timber.d("-34, onPause:%s",2)
+            }
+        }
 
         view.findViewById<View>(R.id.button1)?.setOnClickListener {
             junoPlayer.play(GlobalApp.VIDEO_URL)
@@ -30,7 +41,7 @@ class AudioPlayerFragment: Fragment() {
 
         }
         view.findViewById<View>(R.id.button2)?.setOnClickListener {
-            junoPlayer.stop()
+            junoPlayer.pause()
             Timber.d("-30 , onCreate : %s", 1)
         }
     }

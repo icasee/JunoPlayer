@@ -10,8 +10,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventType.ALL_ADS_COMPLETED
-import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventType.CONTENT_PAUSE_REQUESTED
-import com.google.android.exoplayer2.Player
+import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventType.LOADED
 import com.google.android.exoplayer2.ext.ima.ImaAdsLoader
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
@@ -23,7 +22,6 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
     private var tvPlayerPanel: View? = null
     private var tvPlayerLive: View? = null
     private var tvPlayerSpeaker: ImageView? = null
-    //var tvPlayerTimer: TextView? = null
 
     private val junoPlayer = JunoPlayer(context)
     private val lifecycle: Lifecycle
@@ -42,7 +40,6 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
 
     var listener: JunoPlayerListener? = null
 
-    //TD
     constructor(context: Context?) : this(context, null)
     constructor(context: Context?, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -57,30 +54,32 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
             volume = if (volume == 1f) 0f else 1f
         }
 
-        //playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH);
+        //playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH)
+        //super.setUseController(false)
         super.setPlayer(junoPlayer.getPlayer())
         super.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT)
         super.setKeepScreenOn(true)
-        //super.setUseController(false)
-        player?.addListener(object: Player.EventListener{
-            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                when (playbackState) {
-                    Player.STATE_READY -> {
-                        if (playWhenReady) {
-                            listener?.onPlay()
-                            Timber.d("-87 , PLAY : %s", 1)
-                        } else {
-                            listener?.onPause()
-                            Timber.d("-87 , PAUSE : %s", 2)
-                        }
-                    }
-                    Player.STATE_BUFFERING -> Timber.d("-107 , onPlayerStateChanged : %s", 4)
-                    else -> Timber.e("-94 , onPlayerStateChanged : %s", playbackState)
-                }
-                Timber.d("-57, onPlayerStateChanged:%s", playbackState)
+        junoPlayer.listener = object : JunoPlayerListener{
+            override fun onError(error: Throwable?) {
+                listener?.onError(error)
             }
-        })
 
+            override fun onPlay() {
+                listener?.onPlay()
+            }
+
+            override fun onPause() {
+                listener?.onPause()
+            }
+
+            override fun onEnded() {
+                listener?.onEnded()
+            }
+
+            override fun onBuffering() {
+                listener?.onBuffering()
+            }
+        }
         lifecycle.addObserver(this)
     }
 
@@ -91,13 +90,23 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
     fun playWithAds(videoUrl: String, adTagUrl: String) {
         val imaAdsLoader = ImaAdsLoader(context, Uri.parse(adTagUrl))
         imaAdsLoader.setPlayer(junoPlayer.getPlayer())
-        imaAdsLoader.adsLoader.addAdsLoadedListener {adsManagerEvent ->
-            adsManagerEvent?.adsManager?.addAdEventListener { adEvent ->
-                when (adEvent?.type) {
-                    CONTENT_PAUSE_REQUESTED -> listener?.onAdLoaded()
-                    ALL_ADS_COMPLETED -> listener?.onAdCompleted()
-                    else -> Timber.d("-120 , playWidthAds : %s", adEvent?.type)
+        imaAdsLoader.adsLoader?.run{
+            addAdsLoadedListener {adsManagerEvent ->
+                adsManagerEvent?.adsManager?.run{
+                    addAdEventListener { adEvent ->
+                        when (adEvent?.type) {
+                            LOADED -> listener?.onAdLoaded()
+                            ALL_ADS_COMPLETED -> listener?.onAdCompleted()
+                            else -> Timber.d("-94, playWithAds:%s", adEvent?.type)
+                        }
+                    }
+                    addAdErrorListener { adEvent ->
+                        listener?.onError(adEvent.error)
+                    }
                 }
+            }
+            addAdErrorListener{ adEvent ->
+                listener?.onError(adEvent.error)
             }
         }
 
@@ -121,13 +130,7 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
     fun onLifecyclePause() {
         junoPlayer.pause()
         disposables.clear()
-        Timber.d("-22, onPause:%s", 1)
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onLifecycleResume() {
-        //setProgress()
-        Timber.d("-27, onResume:%s", 2)
+        Timber.d("-125, onLifecyclePause:%s",2)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
