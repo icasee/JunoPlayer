@@ -4,21 +4,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.poktsun.junoplayer.JunoPlayerListener
-import com.poktsun.junoplayer.JunoLifecycle
 import com.poktsun.junoplayer.JunoPlayerView
 import timber.log.Timber
 
 
 class VodPlayerFragment : Fragment() {
 
+    val title by lazy {
+        arguments?.getString("TITLE") ?: "kelvin"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        //return super.onCreateView(inflater, container, savedInstanceState)
         return inflater.inflate(R.layout.fragment_vod_player, container, false)
     }
 
@@ -26,6 +29,8 @@ class VodPlayerFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val junoPlayerView = view.findViewById<JunoPlayerView>(R.id.player_view)
+        junoPlayerView.title = title
+        junoPlayerView.lifecycleOwner = this
         junoPlayerView.run {
             volume = 0f
             listener = object : JunoPlayerListener {
@@ -35,7 +40,7 @@ class VodPlayerFragment : Fragment() {
                 }
 
                 override fun onBuffering() {
-                    Timber.d("-38, onBuffering:%s",6)
+                    Timber.d("-38, onBuffering:%s", 6)
                 }
 
                 override fun onPlay() {
@@ -47,7 +52,7 @@ class VodPlayerFragment : Fragment() {
                 }
 
                 override fun onAdLoaded() {
-                    Timber.d("-42, onAdLoaded:%s",3)
+                    Timber.d("-42, onAdLoaded:%s", 3)
                 }
 
                 override fun onAdCompleted() {
@@ -56,10 +61,12 @@ class VodPlayerFragment : Fragment() {
             }
         }
 
-        view.findViewById<View>(R.id.button1)?.setOnClickListener {
-            junoPlayerView.play(GlobalApp.VIDEO_URL)
-            Timber.d("-30 , onCreate : %s", 1)
-
+        view.findViewById<Button>(R.id.button1)?.apply {
+            text = title
+            setOnClickListener {
+                junoPlayerView.play(GlobalApp.VIDEO_URL)
+                Timber.d("-30 , onCreate : %s", title)
+            }
         }
 
         view.findViewById<View>(R.id.button2)?.setOnClickListener {
@@ -67,8 +74,28 @@ class VodPlayerFragment : Fragment() {
             Timber.d("-30 , onCreate : %s", 1)
         }
 
-        lifecycle.addObserver(JunoLifecycle("VodPlayerFragment"))
+        //lifecycle.addObserver(JunoLifecycle("VodPlayerFragment"))
         //junoPlayerView.registerLifecycle(lifecycle)
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Timber.d("-83, onResume:%s", title)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Timber.d("-88, onPause:%s", title)
+    }
+
+    companion object {
+        fun netInstance(title: String): VodPlayerFragment {
+            return VodPlayerFragment().apply {
+                arguments = Bundle().apply {
+                    putString("TITLE", title)
+                }
+            }
+        }
     }
 }

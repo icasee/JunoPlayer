@@ -48,6 +48,9 @@ class JunoPlayer(context: Context) : AnalyticsListener {
         }
         get() = exoPlayer.volume
 
+    val isPlaying: Boolean
+        get () = exoPlayer.playWhenReady && exoPlayer.playbackState == Player.STATE_READY
+
     init {
         Timber.d("-66, :%s", context)
         exoPlayer.addAnalyticsListener(this)
@@ -55,10 +58,8 @@ class JunoPlayer(context: Context) : AnalyticsListener {
 
     fun getPlayer(): SimpleExoPlayer = exoPlayer
 
-    fun play(
-        url: String
-    ) {
-        val mediaSource = buildMediaSource(Uri.parse(url))
+    fun play(url: String, extension: String? = null) {
+        val mediaSource = buildMediaSource(Uri.parse(url), extension)
         prepare(mediaSource)
     }
 
@@ -106,9 +107,10 @@ class JunoPlayer(context: Context) : AnalyticsListener {
      * @see <a href="https://exoplayer.dev/progressive.html">progressive</a>
      */
     private fun buildMediaSource(
-        uri: Uri
+        uri: Uri,
+        extension: String? = null
     ): MediaSource {
-        return when (val type = Util.inferContentType(uri, null)) {
+        return when (val type = Util.inferContentType(uri, extension)) {
             C.TYPE_DASH -> DashMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(uri)
             C.TYPE_SS -> SsMediaSource.Factory(dataSourceFactory)
