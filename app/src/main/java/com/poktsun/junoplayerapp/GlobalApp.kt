@@ -1,11 +1,11 @@
 package com.poktsun.junoplayerapp
 
-import android.app.Application
 //import androidx.multidex.MultiDexApplication
+import androidx.multidex.MultiDexApplication
 import timber.log.Timber
 
 @Suppress("unused")
-class GlobalApp : Application() {
+class GlobalApp : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()

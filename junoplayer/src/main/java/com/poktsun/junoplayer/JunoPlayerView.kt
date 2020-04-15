@@ -17,7 +17,7 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import timber.log.Timber
 
-class JunoPlayerView : PlayerView, LifecycleObserver {
+class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
     var title: String = this::class.java.simpleName
 
     /**
@@ -53,8 +53,6 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
         }
         get() = junoPlayer.volume
 
-    var listener: JunoPlayerListener? = null
-
     constructor(context: Context?) : this(context, null)
     constructor(context: Context?, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -74,26 +72,11 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
         super.setPlayer(junoPlayer.getPlayer())
         super.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT)
         super.setKeepScreenOn(true)
-        junoPlayer.listener = object : JunoPlayerListener {
-            override fun onError(error: Throwable?) {
-                listener?.onError(error)
-            }
-
-            override fun onPlay() {
-                listener?.onPlay()
-            }
-
-            override fun onPause() {
-                listener?.onPause()
-            }
-
-            override fun onEnded() {
-                listener?.onEnded()
-            }
-
-            override fun onBuffering() {
-                listener?.onBuffering()
-            }
+        junoPlayer.setPlayerStateChangedListener { playerState, error ->
+            onPlayerStateChangedListener?.invoke(playerState, error)
+        }
+        setControllerVisibilityListener {
+            Timber.d("-80, VisibilityListener:%s", it)
         }
         lifecycle.addObserver(this)
         Timber.d("-84, :%s", lifecycle)
@@ -111,18 +94,27 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
                 adsManagerEvent?.adsManager?.run {
                     addAdEventListener { adEvent ->
                         when (adEvent?.type) {
-                            LOADED -> listener?.onAdLoaded()
-                            ALL_ADS_COMPLETED -> listener?.onAdCompleted()
+                            LOADED -> onPlayerStateChangedListener?.invoke(
+                                JunoPlayerState.STATE_AD_LOADED,
+                                null
+                            )
+                            ALL_ADS_COMPLETED -> onPlayerStateChangedListener?.invoke(
+                                JunoPlayerState.STATE_AD_COMPLETED,
+                                null
+                            )
                             else -> Timber.d("-94, playWithAds:%s", adEvent?.type)
                         }
                     }
                     addAdErrorListener { adEvent ->
-                        listener?.onError(adEvent.error)
+                        onPlayerStateChangedListener?.invoke(
+                            JunoPlayerState.STATE_ERROR,
+                            adEvent.error
+                        )
                     }
                 }
             }
             addAdErrorListener { adEvent ->
-                listener?.onError(adEvent.error)
+                onPlayerStateChangedListener?.invoke(JunoPlayerState.STATE_ERROR, adEvent.error)
             }
         }
 
@@ -135,7 +127,7 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
     }
 
     val isPlaying: Boolean
-        get () = player.playWhenReady && player.playbackState == Player.STATE_READY
+        get() = player.playWhenReady && player.playbackState == Player.STATE_READY
 
     //Lifecycle
     override fun onDetachedFromWindow() {
@@ -164,4 +156,5 @@ class JunoPlayerView : PlayerView, LifecycleObserver {
         Timber.d("-157, onDestroy:%s", title)
     }
 
+    override var onPlayerStateChangedListener: ((playerState: Int, error: Throwable?) -> Unit)? = null
 }

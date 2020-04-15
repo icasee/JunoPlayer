@@ -24,16 +24,16 @@ class AudioPlayerFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val junoPlayer = JunoPlayer(context!!)
-        junoPlayer.listener = object : JunoPlayerListener{
-
-            override fun onPlay() {
-                Timber.d("-29, onPlay:%s",1)
-            }
-
-            override fun onPause() {
-                Timber.d("-34, onPause:%s",2)
-            }
-        }
+//        junoPlayer.listener = object : JunoPlayerListener{
+//
+//            override fun onPlay() {
+//                Timber.d("-29, onPlay:%s",1)
+//            }
+//
+//            override fun onPause() {
+//                Timber.d("-34, onPause:%s",2)
+//            }
+//        }
 
         view.findViewById<View>(R.id.button1)?.setOnClickListener {
             junoPlayer.play(GlobalApp.VIDEO_URL)

@@ -31,34 +31,37 @@ class VodPlayerFragment : Fragment() {
         val junoPlayerView = view.findViewById<JunoPlayerView>(R.id.player_view)
         junoPlayerView.title = title
         junoPlayerView.lifecycleOwner = this
-        junoPlayerView.run {
-            volume = 0f
-            listener = object : JunoPlayerListener {
-
-                override fun onEnded() {
-                    Timber.d("-34, onEnded:%s", 5)
-                }
-
-                override fun onBuffering() {
-                    Timber.d("-38, onBuffering:%s", 6)
-                }
-
-                override fun onPlay() {
-                    Timber.d("-34, onPlay:%s", 1)
-                }
-
-                override fun onPause() {
-                    Timber.d("-38, onPause:%s", 2)
-                }
-
-                override fun onAdLoaded() {
-                    Timber.d("-42, onAdLoaded:%s", 3)
-                }
-
-                override fun onAdCompleted() {
-                    Timber.d("-36, onAdCompleted: %s", 4)
-                }
-            }
+//        junoPlayerView.run {
+//            volume = 0f
+//            listener = object : JunoPlayerListener {
+//
+//                override fun onEnded() {
+//                    Timber.d("-34, onEnded:%s", 5)
+//                }
+//
+//                override fun onBuffering() {
+//                    Timber.d("-38, onBuffering:%s", 6)
+//                }
+//
+//                override fun onPlay() {
+//                    Timber.d("-34, onPlay:%s", 1)
+//                }
+//
+//                override fun onPause() {
+//                    Timber.d("-38, onPause:%s", 2)
+//                }
+//
+//                override fun onAdLoaded() {
+//                    Timber.d("-42, onAdLoaded:%s", 3)
+//                }
+//
+//                override fun onAdCompleted() {
+//                    Timber.d("-36, onAdCompleted: %s", 4)
+//                }
+//            }
+//        }
+        junoPlayerView.setPlayerStateChangedListener { playerState, error ->
+            Timber.d("-64, onViewCreated:%s==%s", playerState, error)
         }
 
         view.findViewById<Button>(R.id.button1)?.apply {
