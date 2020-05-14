@@ -17,7 +17,50 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import timber.log.Timber
 
-class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
+class JunoPlayerView : PlayerView, LifecycleObserver {
+    private var playListener: (() -> Unit)? = null
+    private var pauseListener: (() -> Unit)? = null
+    private var progressListener: (() -> Unit)? = null
+    private var loadedListener: (() -> Unit)? = null
+    private var completeListener: (() -> Unit)? = null
+    private var errorListener: ((Throwable?) -> Unit?)? = null
+    private var adEventListener: ((String?) -> Unit?)? = null
+    private var endedListener: (() -> Unit?)? = null
+
+    fun setOnPlay(listener: (() -> Unit)) {
+        playListener = listener
+    }
+
+    fun setOnPause(listener: (() -> Unit)) {
+        pauseListener = listener
+    }
+
+    fun setOnProgress(listener: (() -> Unit)) {
+        progressListener = listener
+    }
+
+    fun setOnEnded(listener: (() -> Unit)) {
+        endedListener = listener
+    }
+
+    fun setOnError(listener: ((error: Throwable?) -> Unit)) {
+        errorListener = listener
+    }
+
+    fun setOnAdEvent(listener: ((type: String?) -> Unit)) {
+        adEventListener = listener
+    }
+
+    fun setOnAdLoaded(listener: (() -> Unit)) {
+        loadedListener = listener
+    }
+
+    fun setOnAdComplete(listener: (() -> Unit)) {
+        completeListener = listener
+    }
+
+
+    // Last Modified: 2020-05-14 23:34 ⓒ
     var title: String = this::class.java.simpleName
 
     /**
@@ -37,8 +80,26 @@ class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
     private var tvPlayerPanel: View? = null
     private var tvPlayerLive: View? = null
     private var tvPlayerSpeaker: ImageView? = null
+    var shareButton: View? = null
+    var screenButton: View? = null
 
-    private val junoPlayer = JunoPlayer(context)
+    private val junoPlayer = JunoPlayer(context).apply {
+        setOnPlay {
+            playListener?.invoke()
+        }
+        setOnPause {
+            pauseListener?.invoke()
+        }
+        setOnProgress {
+            progressListener?.invoke()
+        }
+        setOnEnded {
+            endedListener?.invoke()
+        }
+        setOnError {
+            errorListener?.invoke(it)
+        }
+    }
     private val lifecycle: Lifecycle
         get() {
             return lifecycleOwner.lifecycle
@@ -60,6 +121,8 @@ class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
         attrs,
         defStyleAttr
     ) {
+        screenButton = findViewById(R.id.exo_screen_button)
+        shareButton = findViewById(R.id.exo_share_button)
         tvPlayerPanel = findViewById(R.id.exo_panel)
         tvPlayerLive = findViewById(R.id.exo_live_text)
         tvPlayerSpeaker = findViewById(R.id.exo_speaker)
@@ -72,18 +135,31 @@ class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
         super.setPlayer(junoPlayer.getPlayer())
         super.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT)
         super.setKeepScreenOn(true)
-        junoPlayer.setPlayerStateChangedListener { playerState, error ->
-            onPlayerStateChangedListener?.invoke(playerState, error)
-        }
-        setControllerVisibilityListener {
-            Timber.d("-80, VisibilityListener:%s", it)
-        }
+//        setControllerVisibilityListener {
+//            Timber.d("-80, VisibilityListener:%s", it)
+//        }
         lifecycle.addObserver(this)
         Timber.d("-84, :%s", lifecycle)
     }
 
     fun play(url: String, extension: String? = null) {
         junoPlayer.play(url, extension)
+    }
+
+    fun play() {
+        junoPlayer.play()
+    }
+
+    fun pause() {
+        junoPlayer.pause()
+    }
+
+    fun stop() {
+        junoPlayer.stop()
+    }
+
+    fun release() {
+        junoPlayer.release()
     }
 
     fun playWithAds(videoUrl: String, adTagUrl: String) {
@@ -94,27 +170,20 @@ class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
                 adsManagerEvent?.adsManager?.run {
                     addAdEventListener { adEvent ->
                         when (adEvent?.type) {
-                            LOADED -> onPlayerStateChangedListener?.invoke(
-                                JunoPlayerState.STATE_AD_LOADED,
-                                null
-                            )
-                            ALL_ADS_COMPLETED -> onPlayerStateChangedListener?.invoke(
-                                JunoPlayerState.STATE_AD_COMPLETED,
-                                null
-                            )
+                            LOADED -> loadedListener?.invoke()
+                            ALL_ADS_COMPLETED -> completeListener?.invoke()
                             else -> Timber.d("-94, playWithAds:%s", adEvent?.type)
                         }
+                        adEventListener?.invoke(adEvent?.type?.name)
+                        // Timber.d("-33, setOnProgress:%s", adEvent?.type?.name)
                     }
                     addAdErrorListener { adEvent ->
-                        onPlayerStateChangedListener?.invoke(
-                            JunoPlayerState.STATE_ERROR,
-                            adEvent.error
-                        )
+                        errorListener?.invoke(adEvent.error)
                     }
                 }
             }
             addAdErrorListener { adEvent ->
-                onPlayerStateChangedListener?.invoke(JunoPlayerState.STATE_ERROR, adEvent.error)
+                errorListener?.invoke(adEvent.error)
             }
         }
 
@@ -127,7 +196,10 @@ class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
     }
 
     val isPlaying: Boolean
-        get() = player.playWhenReady && player.playbackState == Player.STATE_READY
+        get() = junoPlayer.isPlaying
+
+    val isPlayingAd: Boolean
+        get() = player.isPlayingAd
 
     //Lifecycle
     override fun onDetachedFromWindow() {
@@ -156,5 +228,5 @@ class JunoPlayerView : PlayerView, LifecycleObserver, JunoPlayerListener {
         Timber.d("-157, onDestroy:%s", title)
     }
 
-    override var onPlayerStateChangedListener: ((playerState: Int, error: Throwable?) -> Unit)? = null
+    //var listener: ((playerState: Int, error: Throwable?) -> Unit)? = null
 }

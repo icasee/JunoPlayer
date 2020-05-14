@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.poktsun.junoplayer.JunoPlayer
-import com.poktsun.junoplayer.JunoPlayerListener
 import timber.log.Timber
 
 class AudioPlayerFragment: Fragment() {
@@ -23,7 +22,29 @@ class AudioPlayerFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val junoPlayer = JunoPlayer(context!!)
+        val junoPlayer = JunoPlayer(requireContext()).apply {
+            setOnPlay {
+                Timber.d("-33, setOnPlay:%s", 1)
+            }
+            setOnPause {
+                Timber.d("-33, setOnPause:%s", 2)
+            }
+            setOnProgress {
+                Timber.d("-33, setOnProgress:%s", 2)
+            }
+            setOnEnded {
+                Timber.d("-33, setOnEnded:%s", 2)
+            }
+            setOnError {
+                Timber.d("-33, setOnError:%s", 3)
+            }
+//            setOnAdLoaded {
+//                Timber.d("-48, setOnAdLoaded:%s", 3)
+//            }
+//            setOnAdComplete {
+//                Timber.d("-51, setOnAdComplete:%s", 5)
+//            }
+        }
 //        junoPlayer.listener = object : JunoPlayerListener{
 //
 //            override fun onPlay() {

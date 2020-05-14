@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.poktsun.junoplayer.JunoPlayerListener
 import com.poktsun.junoplayer.JunoPlayerView
 import timber.log.Timber
 
@@ -37,9 +36,9 @@ class LivePlayerFragment : Fragment() {
 //                    Timber.d("-36, onPause:%s",3)
 //                }
 //            }
-            setPlayerStateChangedListener { playerState, _ ->
-                Timber.d("-41, onViewCreated:%s", playerState)
-            }
+//            setPlayerStateChangedListener { playerState, _ ->
+//                Timber.d("-41, onViewCreated:%s", playerState)
+//            }
 
             play(GlobalApp.VIDEO_URL)
         }

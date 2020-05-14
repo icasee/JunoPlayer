@@ -1,10 +1,7 @@
 package com.poktsun.junoplayer
 
+@Deprecated("")
 interface JunoPlayerListener {
-    var onPlayerStateChangedListener: ((playerState: Int, error: Throwable?) -> Unit)?
 
-    fun setPlayerStateChangedListener(listener: ((playerState: Int, error: Throwable?) -> Unit)) {
-        onPlayerStateChangedListener = listener
-    }
 }
 

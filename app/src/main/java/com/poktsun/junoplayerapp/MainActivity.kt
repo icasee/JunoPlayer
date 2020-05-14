@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
             return when (position) {
                 0 -> VodPlayerFragment.netInstance("AAAA")
                 1 -> VodPlayerFragment.netInstance("BBBB")
-                else -> VodPlayerFragment.netInstance("CCCC")
+                else -> AudioPlayerFragment()
             }
         }
 

@@ -19,7 +19,34 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import timber.log.Timber
 
-class JunoPlayer(context: Context) : AnalyticsListener, JunoPlayerListener {
+class JunoPlayer(context: Context) : AnalyticsListener {
+    private var playListener: (() -> Unit)? = null
+    private var pauseListener: (() -> Unit)? = null
+    private var progressListener: (() -> Unit)? = null
+    private var errorListener: ((Throwable?) -> Unit?)? = null
+    private var endedListener: (() -> Unit?)? = null
+
+    fun setOnPlay(listener: (() -> Unit)) {
+        playListener = listener
+    }
+
+    fun setOnPause(listener: (() -> Unit)) {
+        pauseListener = listener
+    }
+
+    fun setOnProgress(listener: (() -> Unit)) {
+        progressListener = listener
+    }
+
+    fun setOnEnded(listener: (() -> Unit)) {
+        endedListener = listener
+    }
+
+    fun setOnError(listener: ((error: Throwable?) -> Unit)) {
+        errorListener = listener
+    }
+
+    //setup
     private val dataSourceFactory by lazy {
         val userAgent = Util.getUserAgent(context, "nowNews")
         DefaultDataSourceFactory(context, userAgent)
@@ -129,7 +156,7 @@ class JunoPlayer(context: Context) : AnalyticsListener, JunoPlayerListener {
         eventTime: AnalyticsListener.EventTime?,
         error: ExoPlaybackException?
     ) {
-        onPlayerStateChangedListener?.invoke(JunoPlayerState.STATE_ERROR, error)
+        errorListener?.invoke(error)
         Timber.d(error, "-85 , onPlayerError : %s", error?.message)
     }
 
@@ -141,17 +168,16 @@ class JunoPlayer(context: Context) : AnalyticsListener, JunoPlayerListener {
         when (playbackState) {
             Player.STATE_READY -> {
                 if (playWhenReady) {
-                    onPlayerStateChangedListener?.invoke(JunoPlayerState.STATE_PLAYING, null)
+                    playListener?.invoke()
                 } else {
-                    onPlayerStateChangedListener?.invoke(JunoPlayerState.STATE_PAUSED, null)
+                    pauseListener?.invoke()
                 }
             }
-            Player.STATE_BUFFERING -> onPlayerStateChangedListener?.invoke(JunoPlayerState.STATE_BUFFERING, null)
-            Player.STATE_ENDED -> onPlayerStateChangedListener?.invoke(JunoPlayerState.STATE_ENDED, null)
+            Player.STATE_BUFFERING -> progressListener?.invoke()
+            Player.STATE_ENDED -> endedListener?.invoke()
             else -> Timber.e("-151 , onPlayerStateChanged : %s", playbackState)
         }
     }
 
-    //TODO
-    override var onPlayerStateChangedListener: ((playerState: Int, error: Throwable?) -> Unit)? = null
+
 }

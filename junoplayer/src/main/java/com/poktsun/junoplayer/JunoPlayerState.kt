@@ -1,5 +1,6 @@
 package com.poktsun.junoplayer
 
+@Deprecated("")
 object JunoPlayerState {
     var STATE_ERROR = 0
     var STATE_PLAYING = 1
